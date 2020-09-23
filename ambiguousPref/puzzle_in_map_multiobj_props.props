@@ -1,0 +1,6 @@
+multi(R{"total_step"}min=? [C], R{"risky_step"}min=? [C]) 
+
+multi(R{"total_step"}min=? [C], R{"cost"}min=? [C]) 
+
+multi(R{"cost"}min=? [C], R{"risky_step"}min=? [C]) 
+
