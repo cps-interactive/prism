@@ -1,0 +1,59 @@
+mdp
+
+const int N;  // N*N grid map (has to be a multiple of 3)
+formula mid = (N+1)/2;
+
+
+module  map
+
+	// define grid
+	r:[1..N] init 1;  // grid row
+	c:[1..N] init 5;  // grid column
+
+	// stop when reaching the destination
+	[stop] (r=N & c=mid) -> true;
+
+	// move on outer highway with no uncertainty
+  	[move_east] (c>=1 & c<=(N-1)) & !((r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)) -> (c'=c+1);
+	[move_west] (c>=2 & c<=N) & !((r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid))-> (c'=c-1);
+	[move_south] (r>=1 & r<=(N-1)) & !((r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid))-> (r'=r+1);
+	[move_north] (r>=2 & r<=N) & !((r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid))-> (r'=r-1);
+
+	// move in inner alleys with uncertainties
+	[move_east] (r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)-> 0.1:(r'=r+1) + 0.9: (c'=c+1);
+	[move_west] (r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)-> 0.1:(r'=r-1) + 0.9: (c'=c-1);
+	[move_south] (r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)-> 0.9:(r'=r+1) + 0.1: (c'=c+1);
+	[move_north] (r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)-> 0.9:(r'=r-1) + 0.1: (c'=c-1);
+	
+endmodule
+
+
+// label start and destination states
+label "start" = (r=1 & c=mid);
+label "destination" = (r=N & c=mid);
+
+// every move in inner alleys is a risky step
+rewards "risky_step"
+	[move_east] (r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid): 1;
+	[move_west] (r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid): 1;
+	[move_north] (r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid): 1;
+	[move_south] (r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid): 1;
+endrewards
+
+// every  move in outer highway costs $2 per step
+rewards "cost"
+	[move_east] !((r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)) : 2;
+	[move_west] !((r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)): 2;
+	[move_north] !((r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)): 2;
+	[move_south] !((r=2 & c=mid) | (r=3 & c>=mid-1 & c<=mid+1) | (r=4 & c>=mid-2 & c<=mid+2) | (r=5 & c>=mid-3 & c<=mid+3) | (r=6 & c>=mid-2 & c<=mid+2) | (r=7 & c>=mid-1 & c<=mid+1) | (r=8 & c=mid)): 2;
+endrewards
+
+// count total steps
+rewards  "total_step"
+  	[move_north] true : 1;
+ 	[move_south] true : 1;
+	[move_west] true : 1;
+  	[move_east] true : 1;
+	[stop] true : 0;
+endrewards
+
