@@ -1,29 +1,29 @@
 //==============================================================================
-//	
+//
 //	Copyright (c) 2002-
 //	Authors:
 //	* Dave Parker <d.a.parker@cs.bham.ac.uk> (University of Birmingham/Oxford)
 //	* Vojtech Forejt <vojtech.forejt@cs.ox.ac.uk> (University of Oxford)
 //	* Hongyang Qu <hongyang.qu@cs.ox.ac.uk> (University of Oxford)
-//	
+//
 //------------------------------------------------------------------------------
-//	
+//
 //	This file is part of PRISM.
-//	
+//
 //	PRISM is free software; you can redistribute it and/or modify
 //	it under the terms of the GNU General Public License as published by
 //	the Free Software Foundation; either version 2 of the License, or
 //	(at your option) any later version.
-//	
+//
 //	PRISM is distributed in the hope that it will be useful,
 //	but WITHOUT ANY WARRANTY; without even the implied warranty of
 //	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //	GNU General Public License for more details.
-//	
+//
 //	You should have received a copy of the GNU General Public License
 //	along with PRISM; if not, write to the Free Software Foundation,
 //	Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//	
+//
 //==============================================================================
 
 package prism;
@@ -91,7 +91,7 @@ public class MultiObjModelChecker extends PrismComponent
 		mainLog.print("DRA has " + dra[i].size() + " states, " + dra[i].getAcceptance().getSizeStatistics() + ".");
 		l = System.currentTimeMillis() - l;
 		mainLog.println("Time for Rabin translation: " + l / 1000.0 + " seconds.");
-		// If required, export DRA 
+		// If required, export DRA
 		if (settings.getExportPropAut()) {
 			String exportPropAutFilename = PrismUtils.addCounterSuffixToFilename(settings.getExportPropAutFilename(), i + 1);
 			mainLog.println("Exporting DRA to file \"" + exportPropAutFilename + "\"...");
@@ -114,7 +114,7 @@ public class MultiObjModelChecker extends PrismComponent
 	}
 
 	/**
-	 * 
+	 *
 	 * @param modelProduct
 	 * @param rewardsIndex
 	 * @param opsAndBounds
@@ -216,7 +216,7 @@ public class MultiObjModelChecker extends PrismComponent
 			}
 		for (JDDNode mec : mecs)
 			JDD.Deref(mec);
-		// TODO: check if the model satisfies the LTL constraints 
+		// TODO: check if the model satisfies the LTL constraints
 		if (!rmecs.equals(JDD.ZERO)) {
 			boolean constraintViolated = false;
 			if (JDD.AreIntersecting(modelProduct.getStart(), rmecs)) {
@@ -454,7 +454,7 @@ public class MultiObjModelChecker extends PrismComponent
 				}*/
 			//mainLog.print("\n    number of targets = " + JDD.GetNumMintermsString(targetDDs.get(i), modelProduct.getAllDDRowVars().n()));
 			//if(i>0)
-			//	mainLog.print("\n  total number of targets = " + 
+			//	mainLog.print("\n  total number of targets = " +
 			//			JDD.GetNumMintermsString(JDD.Or(targetDDs.get(i), targetDDs.get(i-1)), modelProduct.getAllDDRowVars().n()));
 		}
 
@@ -528,15 +528,15 @@ public class MultiObjModelChecker extends PrismComponent
 	/**
 	 * Perform multi-objective model checking computation.
 	 * Solves achievability, numerical or Pareto queries over n objectives.
-	 *  
+	 *
 	 * @param model The MDP
 	 * @param mcLtl An LTL model checker (for finding end components)
-	 * @param transRewards MTBDDs for transition rewards (reward objectives only)  
+	 * @param transRewards MTBDDs for transition rewards (reward objectives only)
 	 * @param start BDD giving the (initial) state for which values are to be computed
 	 * @param targets BDDs giving sets of target states (probability objectives only)
 	 * @param combinations
 	 * @param combinationIDs
-	 * @param opsAndBounds Information about the list of objectives 
+	 * @param opsAndBounds Information about the list of objectives
 	 * @param hasconflictobjectives
 	 */
 	protected Object computeMultiReachProbs(NondetModel model, LTLModelChecker mcLtl, List<JDDNode> transRewards, JDDNode start, List<JDDNode> targets,
@@ -568,7 +568,7 @@ public class MultiObjModelChecker extends PrismComponent
 			labels[i] = tmp;
 		}
 
-		// If required, export info about target states 
+		// If required, export info about target states
 		if (prism.getExportTarget()) {
 			JDDNode labels2[] = new JDDNode[numTargets + 1];
 			String labelNames[] = new String[numTargets + 1];
@@ -614,8 +614,8 @@ public class MultiObjModelChecker extends PrismComponent
 		}
 
 		/*if(op1>2) { // the first query is about reward
-			JDDNode no_r = PrismMTBDD.Prob0A(modelProduct.getTrans01(), modelProduct.getReach(), 
-					modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(), 
+			JDDNode no_r = PrismMTBDD.Prob0A(modelProduct.getTrans01(), modelProduct.getReach(),
+					modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
 					modelProduct.getAllDDNondetVars(), modelProduct.getReach(), targets.get(0));
 			JDD.Ref(no_r);
 			maybe_r = JDD.And(modelProduct.getReach(), JDD.Not(JDD.Or(targets.get(0), no_r)));
@@ -836,6 +836,26 @@ public class MultiObjModelChecker extends PrismComponent
 		}
 
 		JDD.Deref(a);
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+		// compute results for user specified preference weights
+		Point preference = new Point(new double[]{0.5, 0.5});
+		mainLog.println("**The user specified preference weight is " + preference);
+
+		double[] result_;
+		if (useGS) {
+			result_ = PrismSparse.NondetMultiObjGS(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
+					modelProduct.getAllDDNondetVars(), false, st, adversary, trans_matrix, probDoubleVectors, rewSparseMatrices, preference.getCoords());
+		} else {
+			result_ = PrismSparse.NondetMultiObj(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
+					modelProduct.getAllDDNondetVars(), false, st, adversary, trans_matrix, modelProduct.getSynchs(), probDoubleVectors, probStepBounds,
+					rewSparseMatrices, preference.getCoords(), rewardStepBounds);
+		}
+
+		Point resultPoint = new Point(result_);
+		mainLog.println("**Computed point based on user preference: " + resultPoint +"\n");
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 		for (int i = 0; i < dimProb; i++) {
 			double[] result = null;
