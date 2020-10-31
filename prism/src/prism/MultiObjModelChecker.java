@@ -729,9 +729,9 @@ public class MultiObjModelChecker extends PrismComponent
 		int numNumericalObjectives = opsAndBounds.numberOfNumerical();
 
 		// Check for unsupported computations
-		if (numNumericalObjectives > 2) {
-			throw new PrismException("Pareto curve generation is currently only supported for 2 objectives");
-		}
+		// if (numNumericalObjectives > 2) {
+		// 	throw new PrismException("Pareto curve generation is currently only supported for 2 objectives");
+		// }
 		if (numNumericalObjectives >= 2 && opsAndBounds.probSize() + opsAndBounds.rewardSize() > numNumericalObjectives) {
 			throw new PrismException("Pareto curve generation is currently not allowed if there are other (bounded) objectives");
 		}
@@ -838,22 +838,59 @@ public class MultiObjModelChecker extends PrismComponent
 		JDD.Deref(a);
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
+		// define preference, uncertainty, and granularity
+		double [] pref = {0.1, 0.9};
+		double uncertainty = 0.05;
+		double [] granularity = {-1, 0, 1};
+
 		// compute results for user specified preference weights
-		Point preference = new Point(new double[]{0.5, 0.5});
-		mainLog.println("**The user specified preference weight is " + preference);
+		for(int i=0; i<granularity.length; i++){
+			double [] pref_final = {pref[0] + granularity[i] * uncertainty, pref[1] - granularity[i] * uncertainty};
+			Point preference = new Point(pref_final);
+			mainLog.println("**The preference encoded:" + preference);
 
-		double[] result_;
-		if (useGS) {
-			result_ = PrismSparse.NondetMultiObjGS(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
-					modelProduct.getAllDDNondetVars(), false, st, adversary, trans_matrix, probDoubleVectors, rewSparseMatrices, preference.getCoords());
-		} else {
-			result_ = PrismSparse.NondetMultiObj(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
-					modelProduct.getAllDDNondetVars(), false, st, adversary, trans_matrix, modelProduct.getSynchs(), probDoubleVectors, probStepBounds,
-					rewSparseMatrices, preference.getCoords(), rewardStepBounds);
+			double[] result_;
+			if (useGS) {
+				result_ = PrismSparse.NondetMultiObjGS(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
+						modelProduct.getAllDDNondetVars(), false, st, adversary, trans_matrix, probDoubleVectors, rewSparseMatrices, preference.getCoords());
+			} else {
+				result_ = PrismSparse.NondetMultiObj(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
+						modelProduct.getAllDDNondetVars(), false, st, adversary, trans_matrix, modelProduct.getSynchs(), probDoubleVectors, probStepBounds,
+						rewSparseMatrices, preference.getCoords(), rewardStepBounds);
+			}
+
+			Point resultPoint = new Point(result_);
+
+			mainLog.println("**Computed point based on user preference: " + resultPoint +"\n");
 		}
+//---------------------
+		// define preference, uncertainty, and granularity
+		// double [] pref = {0.2, 0.3, 0.5};
+		// double uncertainty = 0.1;
+		// double [] granularity = {-1, 0, 1};
+		// int obj = 0;
+		//
+		// // compute results for user specified preference weights
+		// for(int i=0; i<granularity.length; i++){
+		// 	double [] pref_final = {pref[0] + granularity[i] * uncertainty, pref[1] - granularity[i] * uncertainty/2, pref[2] - granularity[i] * uncertainty/2};
+		// 	Point preference = new Point(pref_final);
+		// 	mainLog.println("**The preference encoded:" + preference);
+		//
+		//
+		// 	double[] result_;
+		// 	if (useGS) {
+		// 		result_ = PrismSparse.NondetMultiObjGS(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
+		// 				modelProduct.getAllDDNondetVars(), false, st, adversary, trans_matrix, probDoubleVectors, rewSparseMatrices, preference.getCoords());
+		// 	} else {
+		// 		result_ = PrismSparse.NondetMultiObj(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
+		// 				modelProduct.getAllDDNondetVars(), false, st, adversary, trans_matrix, modelProduct.getSynchs(), probDoubleVectors, probStepBounds,
+		// 				rewSparseMatrices, preference.getCoords(), rewardStepBounds);
+		// 	}
+		//
+		// 	Point resultPoint = new Point(result_);
+		// 	mainLog.println("**Computed point based on user preference: " + resultPoint +"\n");
+		// }
 
-		Point resultPoint = new Point(result_);
-		mainLog.println("**Computed point based on user preference: " + resultPoint +"\n");
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
