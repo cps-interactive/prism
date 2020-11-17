@@ -849,6 +849,11 @@ public class MultiObjModelChecker extends PrismComponent
 			Point preference = new Point(pref_final);
 			mainLog.println("**The preference encoded:" + preference);
 
+			String advFileName = settings.getString(PrismSettings.PRISM_EXPORT_ADV_FILENAME);
+			if (settings.getChoice(PrismSettings.PRISM_EXPORT_ADV) != Prism.EXPORT_ADV_NONE) {
+				PrismNative.setExportAdvFilename(PrismUtils.addCounterSuffixToFilename(advFileName+"*", i));
+			}
+
 			double[] result_;
 			if (useGS) {
 				result_ = PrismSparse.NondetMultiObjGS(modelProduct.getODD(), modelProduct.getAllDDRowVars(), modelProduct.getAllDDColVars(),
