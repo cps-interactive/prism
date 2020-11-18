@@ -445,8 +445,12 @@ JNIEXPORT jdoubleArray __jlongpointer JNICALL Java_sparse_PrismSparse_PS_1Nondet
 								// (which resolves problems with end components)
 								// but here it's hard to know when it is max, due to the
 								// mix of objectives and some being negated
-								// so we just always only pick strictly better ones
-								if ((min&&(d1<soln[i])) || (!min&&(d1>soln[i]))) {
+								// we use the sign of d1 to guess if it's min/max
+								if (d1>0) {
+									if ((min&&(d1<soln[i])) || (!min&&(d1>soln[i]))) {
+										adv[i] = j;
+									}
+								} else {
 									adv[i] = j;
 								}
 							}
